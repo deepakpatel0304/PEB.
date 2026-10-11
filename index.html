@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PEB Shed Structural Design &amp; STAAD.Pro Model Generator</title>
+<title>Truss Modal Generator &amp; Author DEEPAK PATEL</title>
 <style>
 /* ============================================================
    styles.css — Blueprint / drafting-table engineering aesthetic.
@@ -232,7 +232,7 @@ details.advanced summary{cursor:pointer;font-size:11.5px;font-weight:700;color:v
   <header id="app-header">
     <div class="brand">
       <span class="brand-mark">PEB</span>
-      <span class="brand-text">Structural Design &amp; STAAD.Pro Model Generator</span>
+      <span class="brand-text">Author:-DEEPAK PATEL (6354979297)</span>
     </div>
     <div class="header-project" id="header-project-name">Untitled Project</div>
     <div class="toolbar">
@@ -253,17 +253,18 @@ details.advanced summary{cursor:pointer;font-size:11.5px;font-weight:700;color:v
         <button class="nav-item" data-panel="geometry">2. Geometry</button>
         <button class="nav-item" data-panel="roof">3. Roof / Truss</button>
         <button class="nav-item" data-panel="materials">4. Materials</button>
-        <button class="nav-item" data-panel="sections">5. Sections</button>
-        <button class="nav-item" data-panel="supports">6. Supports</button>
-        <button class="nav-item" data-panel="bracing">7. Bracing</button>
-        <button class="nav-item" data-panel="wind">8. Wind Load</button>
-        <button class="nav-item" data-panel="deadload">9. Dead Load</button>
-        <button class="nav-item" data-panel="liveload">10. Live Load</button>
-        <button class="nav-item" data-panel="solar">11. Solar Load</button>
+        <button class="nav-item" data-panel="supports">5. Supports</button>
+        <button class="nav-item" data-panel="bracing">6. Bracing &amp; Girts</button>
+        <button class="nav-item" data-panel="deadload">7. Dead Load</button>
+        <button class="nav-item" data-panel="liveload">8. Live Load</button>
+        <button class="nav-item" data-panel="wind">9. Wind Load</button>
+        <button class="nav-item" data-panel="solar">10. Solar Load</button>
+        <button class="nav-item" data-panel="eq">11. Earthquake Load</button>
         <button class="nav-item" data-panel="loadcases">12. Load Cases</button>
         <button class="nav-item" data-panel="combinations">13. Load Combinations</button>
-        <button class="nav-item" data-panel="staadgen">14. STAAD Generator</button>
-        <button class="nav-item" data-panel="report">15. Calculation Report</button>
+        <button class="nav-item" data-panel="sections">14. Member Sections</button>
+        <button class="nav-item" data-panel="staadgen">15. STAAD Generator</button>
+        <button class="nav-item" data-panel="report">16. Calculation Report</button>
       </div>
 
     </nav>
@@ -470,10 +471,16 @@ details.advanced summary{cursor:pointer;font-size:11.5px;font-weight:700;color:v
         <div class="field"><label><input type="checkbox" data-path="bracing.roofBracedBaysCustomized"> Customize which bays get roof bracing (default = first &amp; last bay)</label></div>
         <div id="roof-braced-bays-list" class="mini-table"></div>
 
+        <h3>Girts (side walls)</h3>
+        <div class="field"><label><input type="checkbox" data-path="girts.enabled"> Include side-wall girts</label></div>
+        <div class="field"><label>Girt spacing (m)</label><input type="number" step="0.1" min="0.3" data-path="girts.spacing"></div>
+        <div class="field"><label>Wall cladding weight (kN/m²)</label><input type="number" step="0.01" min="0" data-path="girts.claddingLoad"></div>
+        <p class="hint">Girts run along both side walls between the columns. Columns are split at every girt level; wall wind and cladding weight go to the girts and then into the columns (the eave strut takes the top half-gap, the base the lowest). Girts are never released. End-wall girts / wind columns are not modelled.</p>
+
         <h3>Connections</h3>
         <div class="field"><label><input type="checkbox" data-path="connections.trussEndRelease" id="truss-release-checkbox"> Release truss web/bottom-chord member ends (pinned connection idealisation)</label></div>
         <p class="hint" id="release-warning" style="display:none">⚠ WARNING: this changes force distribution across the truss. Only enable if your connection design matches a pinned idealisation.</p>
-        <div class="field"><label><input type="checkbox" data-path="connections.purlinRelease" id="purlin-release-checkbox"> Purlin Release — release purlin member ends (idealised simply-supported purlin)</label></div>
+        <div class="field"><label><input type="checkbox" data-path="connections.purlinRelease" id="purlin-release-checkbox"> Purlin Release — release purlin member ends (idealised simply-supported purlin; periphery purlins - eave/edge lines and end bays - are never released)</label></div>
         <p class="hint" id="purlin-release-warning" style="display:none">⚠ WARNING: this changes force distribution into the rafter/top chord. Only enable if your purlin cleat/sag-rod connection matches a pinned idealisation.</p>
       </section>
 
@@ -638,6 +645,17 @@ details.advanced summary{cursor:pointer;font-size:11.5px;font-weight:700;color:v
         </div>
       </section>
 
+      <!-- 12. EARTHQUAKE -->
+      <section class="panel" data-panel="eq">
+        <h2>Earthquake Load (IS 1893 Part 1 : 2016)</h2>
+        <div class="field"><label><input type="checkbox" data-path="eq.enabled"> Include earthquake load (EQ +X, EQ +Z)</label></div>
+        <div class="field"><label>Seismic Zone</label><select data-path="eq.zone"><option value="II">Zone II (Z = 0.10)</option><option value="III">Zone III (Z = 0.16)</option><option value="IV">Zone IV (Z = 0.24)</option><option value="V">Zone V (Z = 0.36)</option></select></div>
+        <div class="field"><label>Soil Type</label><select data-path="eq.soil"><option value="I">Type I - Rock / hard soil</option><option value="II">Type II - Medium soil</option><option value="III">Type III - Soft soil</option></select></div>
+        <div class="field"><label>Importance Factor I</label><select data-path="eq.I"><option value="1">1.0 - Ordinary</option><option value="1.2">1.2 - Important</option><option value="1.5">1.5 - Critical</option></select></div>
+        <div class="field"><label>Response Reduction Factor R</label><select data-path="eq.R"><option value="3">3 - Ordinary moment frame</option><option value="4">4 - Ordinary braced frame</option><option value="5">5 - Special moment frame</option></select></div>
+        <div id="eq-result" class="calc-panel"></div>
+      </section>
+
       <!-- 12. LOAD CASES -->
       <section class="panel" data-panel="loadcases">
         <h2>Load Cases</h2>
@@ -660,6 +678,7 @@ details.advanced summary{cursor:pointer;font-size:11.5px;font-weight:700;color:v
         <div class="btn-row">
           <button class="btn primary" id="btn-download-staad">Download .STD File</button>
           <button class="btn" id="btn-open-staad">Generate &amp; Open in STAAD.Pro</button>
+          <button class="btn" id="btn-lock-staad" style="display:none">🔒 Lock</button>
         </div>
         <h3>STAAD Command Preview</h3>
         <pre id="staad-full-preview" class="staad-preview"></pre>
@@ -723,6 +742,7 @@ details.advanced summary{cursor:pointer;font-size:11.5px;font-weight:700;color:v
               <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.web"> Web Members</label>
               <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.purlin"> Purlins</label>
               <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.bottomTie"> Bottom Ties</label>
+              <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.girt"> Girts</label>
               <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.bracingWall"> Wall Bracing</label>
               <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.bracingRoof"> Roof Bracing</label>
               <label class="checkline small"><input type="checkbox" data-path="ui.visibleGroups.nodes"> Nodes</label>
@@ -1018,7 +1038,7 @@ const AppState = (function () {
       structuralSystem: 'peb',
 
       project: {
-        name: 'New PEB Shed Project',
+        name: 'Industrial Building 01',
         location: '',
         code: 'IS 800:2007 + IS 875 (Part 3):2015',
         unitSystem: 'm-kN'          // 'm-kN' | 'mm-N'
@@ -1099,6 +1119,7 @@ const AppState = (function () {
         bottomChord: { kind: 'RHS', designation: 'RHS100X50X4',   custom: { D: 100, B: 50, t: 4 } },
         web:         { kind: 'SHS', designation: 'SHS60X60X4',    custom: { D: 60, t: 4 } },
         purlin:      { kind: 'RHS', designation: 'RHS100X50X3.2', custom: { D: 100, B: 50, t: 3.2 } },
+        girt:        { kind: 'RHS', designation: 'RHS100X50X3.2', custom: { D: 100, B: 50, t: 3.2 } },
         bracing:     { kind: 'ISA',  designation: 'ISA65X65X6',    custom: null }
       },
 
@@ -1168,15 +1189,18 @@ const AppState = (function () {
 
       deadLoad: {
         // all in kN/m2 (applied over sloped roof surface area — see Loads module note)
-        roofSheeting: 0.06, purlinsAllowance: 0.02, bracingAllowance: 0.01,
-        insulation: 0.03, ceiling: 0.00, services: 0.03, misc: 0.05
+        roofSheeting: 0.1, purlinsAllowance: 0.00, bracingAllowance: 0.00,
+        insulation: 0.00, ceiling: 0.00, services: 0.00, misc: 0.00
       },
 
       liveLoad: { roofLive: 0.75, maintenance: 0, pointLoad: 0 },
 
+      eq: { enabled: false, zone: 'III', soil: 'II', I: '1', R: '3' },   // IS 1893 (Part 1):2016 equivalent static
+      girts: { enabled: true, spacing: 1.5, claddingLoad: 0.10 },        // side-wall girts: spacing (m), wall cladding weight (kN/m2)
+
       solar: {
-        enabled: false, panelDeadLoad: 0.15, mountingLoad: 0.05,
-        inclinationDeg: 10, areaFactor: 1.0
+        enabled: false, panelDeadLoad: 0.15, mountingLoad: 0.00,
+        inclinationDeg: 0.0, areaFactor: 1.0
       },
 
       loadCasesConfig: { customNames: {} },
@@ -1307,7 +1331,7 @@ const AppState = (function () {
         // 3D viewer Show/Hide layer toggles — all default visible.
         visibleGroups: {
           columns: true, topChord: true, bottomChord: true, web: true,
-          purlin: true, bottomTie: true, bracingWall: true, bracingRoof: true,
+          purlin: true, bottomTie: true, girt: true, bracingWall: true, bracingRoof: true,
           nodes: true
         }
       }
@@ -1741,7 +1765,7 @@ const Geometry = (function () {
     const members = [];
     const groups = {
       columns: [], topChord: [], bottomChord: [], web: [],
-      purlin: [], bottomTie: [], bracingWall: [], bracingRoof: []
+      purlin: [], bottomTie: [], girt: [], bracingWall: [], bracingRoof: []
     };
 
     let nextNodeId = 1, nextMemberId = 1;
@@ -1760,7 +1784,12 @@ const Geometry = (function () {
       if (!ni || !nj || ni === nj) return null;
       const dupKey = ni < nj ? `${ni}-${nj}` : `${nj}-${ni}`;
       if (addMember._seen.has(dupKey)) return addMember._seen.get(dupKey); // avoid duplicate members
-      const a = nodes.find(n => n.id === ni), b = nodes.find(n => n.id === nj);
+      let a = nodes.find(n => n.id === ni), b = nodes.find(n => n.id === nj);
+      // Member direction rule (no beta angle needed): every member runs toward +X; a member with no X component runs toward +Z;
+      // a vertical member runs bottom-to-top. STAAD derives the local axes from the member direction, so all members of a kind
+      // (e.g. every rafter / chord / web of a frame) now get local axes pointing the same way.
+      const dx = b.x - a.x, dz = b.z - a.z, dy = b.y - a.y;
+      if (Math.abs(dx) > 1e-9 ? dx < 0 : Math.abs(dz) > 1e-9 ? dz < 0 : dy < 0) { const t = ni; ni = nj; nj = t; const u = a; a = b; b = u; }
       const id = nextMemberId++;
       const length = Utils.distance3D(a, b);
       const m = Object.assign({ id, ni, nj, group, length }, extra || {});
@@ -1773,13 +1802,18 @@ const Geometry = (function () {
 
     const profile = Roof.buildTrussProfile(state, roofGeom);
     const perFrameKeyMaps = [];
+    // Side-wall girt levels (m above the base): every `spacing` m, the top girt at least 1/4 spacing below the eave strut
+    const gcfg = state.girts || {}, gs = Math.max(Number(gcfg.spacing) || 1.5, 0.3), colH = roofGeom.bottomChordHeight, gLevels = [];
+    if (gcfg.enabled !== false) for (let k = 1; k * gs <= colH - 0.25 * gs + 1e-9; k++) gLevels.push(Utils.round(k * gs, 6));
 
     framesX.forEach((x) => {
       const keyMap = {};
       profile.supportZs.forEach(z => {
         const gnd = addNode(x, 0, z);
         const top = addNode(x, roofGeom.bottomChordHeight, z);
-        addMember(gnd, top, 'columns', { wallZ: z, frameX: x });
+        let prev = gnd;                                  // the column is split at every girt level so girts frame into real nodes
+        gLevels.forEach(y => { const nd = addNode(x, y, z); addMember(prev, nd, 'columns', { wallZ: z, frameX: x }); prev = nd; });
+        addMember(prev, top, 'columns', { wallZ: z, frameX: x });
         keyMap[`GND@${z}`] = gnd;
         keyMap[`COLTOP@${z}`] = top;
       });
@@ -1864,10 +1898,17 @@ const Geometry = (function () {
     });
 
     // Bracing
+    // Side-wall girts: horizontal members between consecutive frames at every girt level on the two outer wall lines
+    const gzs = profile.supportZs, zMin = Math.min(...gzs), zMax = Math.max(...gzs);
+    if (gLevels.length && zMax - zMin > 1e-6) {
+      [zMin, zMax].forEach(z => gLevels.forEach((y, k) => {
+        for (let i = 0; i < framesX.length - 1; i++) addMember(addNode(framesX[i], y, z), addNode(framesX[i + 1], y, z), 'girt', { wallZ: z, level: k + 1 });
+      }));
+    }
     buildWallBracing(state, framesX, addNode, addMember, roofGeom);
     buildRoofBracing(state, framesX, perFrameKeyMaps, profile, addMember);
 
-    return { nodes, members, groups, framesX, roofGeom, profile, numFrames, purlinLineMembers, bottomTieLineMembers };
+    return { nodes, members, groups, framesX, roofGeom, profile, numFrames, purlinLineMembers, bottomTieLineMembers, girtLevels: gLevels };
   }
 
   function resolveBracedBays(state, numberOfBays, customizedKey, indicesKey) {
@@ -2603,8 +2644,8 @@ const Wind = (function () {
      then WIND +X/-X/+Z/-Z (whichever enabled), then ROOF UPLIFT /
      ROOF DOWNWARD (if enabled as separate cases). Combinations are
      generated per IS 800:2007 Table 4 (a representative strength +
-     serviceability subset covering DL/LL/WL only — no crane/seismic
-     loads in this tool). Always shown to the user for review/edit
+     serviceability subset covering DL/LL/WL/EL — no crane loads in
+     this tool). Always shown to the user for review/edit
      before STAAD export, per spec item 17.
    ============================================================ */
 
@@ -2720,23 +2761,43 @@ const Loads = (function () {
     return out;
   }
 
+  // Vertical tributary height of every girt line: half the gap to each neighbour; the ground and the eave strut are the end supports
+  function girtTribs(model) {
+    const lv = model.girtLevels || [], H = model.roofGeom.bottomChordHeight;
+    return { th: lv.map((y, k) => ((k + 1 < lv.length ? lv[k + 1] : H) - (k > 0 ? lv[k - 1] : 0)) / 2), eaveHalf: lv.length ? (H - lv[lv.length - 1]) / 2 : 0 };
+  }
+  function eaveStrutIds(model, wallZ) {              // eave purlin / eave strut members of one wall (heel level)
+    const H = model.roofGeom.bottomChordHeight, N = model.nodes;
+    return model.members.filter(m => (m.group === 'purlin' || m.group === 'bottomTie') &&
+      [m.ni, m.nj].every(i => Math.abs(N[i - 1].y - H) < 1e-6 && Math.abs(N[i - 1].z - wallZ) < 1e-6)).map(m => m.id);
+  }
+  function girtDeadLoads(state, model) {             // wall cladding weight carried by the girts (and the eave strut)
+    const c = Number((state.girts || {}).claddingLoad) || 0, gt = girtTribs(model), out = [], walls = new Set();
+    if (!(c > 0) || !gt.th.length) return out;
+    model.members.forEach(m => { if (m.group === 'girt') { out.push({ memberId: m.id, gy: -c * gt.th[m.level - 1] }); walls.add(m.wallZ); } });
+    walls.forEach(z => eaveStrutIds(model, z).forEach(id => out.push({ memberId: id, gy: -c * gt.eaveHalf })));
+    return out;
+  }
+
   function generateDeadLoad(state, model) {
     const d = state.deadLoad;
     const roofArea = (Number(d.roofSheeting) || 0) + (Number(d.purlinsAllowance) || 0) +
       (Number(d.bracingAllowance) || 0) + (Number(d.insulation) || 0) + (Number(d.misc) || 0);
     const ceilingArea = (Number(d.ceiling) || 0) + (Number(d.services) || 0);
     return {
-      memberLoads: [...purlinUDLLoads(model, roofArea), ...bottomTieUDLLoads(model, ceilingArea)],
+      memberLoads: [...purlinUDLLoads(model, roofArea), ...bottomTieUDLLoads(model, ceilingArea), ...girtDeadLoads(state, model)],
       roofAreaTotal: roofArea, ceilingAreaTotal: ceilingArea
     };
   }
 
   function generateLiveLoad(state, model) {
     const l = state.liveLoad;
-    const memberLoads = purlinUDLLoads(model, Number(l.roofLive) || 0);
+    // IS 875 (Part 2): roof imposed load is given per m2 of PLAN area -> per m2 of sloped surface = q x cos(theta)
+    const c = Math.cos((model.roofGeom && model.roofGeom.roofAngleRad) || 0);
+    const memberLoads = purlinUDLLoads(model, (Number(l.roofLive) || 0) * c);
     if (Number(l.maintenance) > 0) {
       // maintenance load treated as an additional (enveloping) roof UDL contribution
-      purlinUDLLoads(model, Number(l.maintenance)).forEach(x => memberLoads.push(x));
+      purlinUDLLoads(model, Number(l.maintenance) * c).forEach(x => memberLoads.push(x));
     }
     return { memberLoads, pointLoad: Number(l.pointLoad) || 0 };
   }
@@ -2757,13 +2818,30 @@ const Loads = (function () {
     const framesX = model.framesX;
 
     if (axis === 'Z') {
-      const colTrib = columnTributaryMap(framesX);
-      model.members.filter(m => m.group === 'columns').forEach(m => {
-        const isWindwardWall = (d.wall.windward.outwardNormal.z < 0) === (m.wallZ === 0);
-        const w = d.wall[isWindwardWall ? 'windward' : 'leeward'];
-        const trib = colTrib[Utils.round(m.frameX, 6)] || 0;
-        if (trib > 0 && w.Pnet !== 0) out.push({ memberId: m.id, gz: -w.outwardNormal.z * w.Pnet * trib, sourceWall: isWindwardWall ? 'windward' : 'leeward' });
-      });
+      const colTrib = columnTributaryMap(framesX), gt = girtTribs(model);
+      const wallOf = zw => { const isW = (d.wall.windward.outwardNormal.z < 0) === (zw === 0); return { w: d.wall[isW ? 'windward' : 'leeward'], src: isW ? 'windward' : 'leeward' }; };
+      if (!gt.th.length) {
+        model.members.filter(m => m.group === 'columns').forEach(m => {
+          const { w, src } = wallOf(m.wallZ), trib = colTrib[Utils.round(m.frameX, 6)] || 0;
+          if (trib > 0 && w.Pnet !== 0) out.push({ memberId: m.id, gz: -w.outwardNormal.z * w.Pnet * trib, sourceWall: src });
+        });
+      } else {
+        // Girts ON: wall pressure -> girts (UDL = Pnet x tributary height) -> columns; the eave strut takes the top half-gap
+        const walls = new Set();
+        model.members.filter(m => m.group === 'girt').forEach(m => {
+          walls.add(m.wallZ); const { w, src } = wallOf(m.wallZ);
+          if (w.Pnet !== 0) out.push({ memberId: m.id, gz: -w.outwardNormal.z * w.Pnet * gt.th[m.level - 1], sourceWall: src });
+        });
+        walls.forEach(zw => {
+          const { w, src } = wallOf(zw); if (w.Pnet === 0) return;
+          const ids = eaveStrutIds(model, zw);
+          if (ids.length) ids.forEach(id => out.push({ memberId: id, gz: -w.outwardNormal.z * w.Pnet * gt.eaveHalf, sourceWall: src }));
+          else model.members.filter(m => m.group === 'columns' && m.wallZ === zw && Math.abs(model.nodes[m.nj - 1].y - model.roofGeom.bottomChordHeight) < 1e-6).forEach(m => {
+            const trib = colTrib[Utils.round(m.frameX, 6)] || 0;      // no eave member: the top strip goes on the top column segment
+            if (trib > 0) out.push({ memberId: m.id, gz: -w.outwardNormal.z * w.Pnet * trib * gt.eaveHalf / m.length, sourceWall: src });
+          });
+        });
+      }
     } else {
       // Simplified: gable-end wall pressure applied only to the end-frame's
       // own two columns (no separate gable-wall framing modelled) — see README.
@@ -2785,9 +2863,9 @@ const Loads = (function () {
       const zone = d.roofZones.find(rz => rz.side === sideId) || d.roofZones[0];
       const w = trib[lineKey] || 0;
       if (!zone || w <= 0 || zone.Pnet === 0) return;
-      // Roof pressure acts normal to the roof plane = purlin LOCAL Y (STAAD "UNI Y"): every purlin
-      // carries BETA = +/- roof angle (Staad.constantsBlock) so local +Y is the roof's outward normal.
-      // Pnet > 0 pushes into the roof (negative local Y), Pnet < 0 is suction (positive local Y).
+      // Roof pressure acts normal to the roof surface. `ly` is that normal load (kN/m), +ve along the roof's outward normal:
+      // Pnet > 0 pushes into the roof (negative), Pnet < 0 is suction (positive). The STAAD writer turns it into GLOBAL
+      // GY / GZ components with the roof angle, so no beta angle is needed.
       const ly = -zone.Pnet * w;
       model.purlinLineMembers[lineKey].forEach(mid => {
         if (mid) out.push({ memberId: mid, ly, sourceWall: 'roof:' + zone.zoneName });
@@ -2808,7 +2886,7 @@ const Loads = (function () {
       if (w <= 0) return;
       model.purlinLineMembers[lineKey].forEach(mid => {
         if (!mid) return;
-        out.push({ memberId: mid, ly: -rz.Pnet * w || 0 });   // local Y = roof normal (see generateWindMemberLoads)
+        out.push({ memberId: mid, ly: -rz.Pnet * w || 0 });   // normal to the roof (see generateWindMemberLoads)
       });
     });
     return out;
@@ -2828,7 +2906,9 @@ const Loads = (function () {
     { key: 'windNZ', defaultName: 'WIND -Z (CPI+)', kind: 'wind', enableFlag: 'windNZ' },
     { key: 'windNZ_s', defaultName: 'WIND -Z (CPI-)', kind: 'wind', enableFlag: 'windNZ' },
     { key: 'roofUplift', defaultName: 'ROOF UPLIFT', kind: 'wind', enableFlag: 'roofUplift' },
-    { key: 'roofDownward', defaultName: 'ROOF DOWNWARD PRESSURE', kind: 'wind', enableFlag: 'roofDownward' }
+    { key: 'roofDownward', defaultName: 'ROOF DOWNWARD PRESSURE', kind: 'wind', enableFlag: 'roofDownward' },
+    { key: 'eqX', defaultName: 'EARTHQUAKE +X', kind: 'eq', eq: true },
+    { key: 'eqZ', defaultName: 'EARTHQUAKE +Z', kind: 'eq', eq: true }
   ];
 
   function buildLoadCases(state, model, windResults) {
@@ -2836,6 +2916,7 @@ const Loads = (function () {
     let id = 1;
     CASE_DEFS.forEach(def => {
       if (def.optional === 'solar.enabled' && !state.solar.enabled) return;
+      if (def.eq && !(state.eq && state.eq.enabled)) return;
       if (def.enableFlag && !state.wind.enabledCases[def.enableFlag]) return;
 
       const customName = state.loadCasesConfig.customNames[def.key];
@@ -2845,6 +2926,7 @@ const Loads = (function () {
       if (def.key === 'dead') { selfWeight = true; memberLoads = generateDeadLoad(state, model).memberLoads; }
       else if (def.key === 'live') { memberLoads = generateLiveLoad(state, model).memberLoads; }
       else if (def.key === 'solar') { memberLoads = generateSolarLoad(state, model).memberLoads; }
+      else if (def.eq) { memberLoads = Seismic.loads(state, model, def.key); }
       else if (def.key === 'roofUplift') { memberLoads = generateRoofOnlyCaseLoads(model, windResults, 'uplift'); }
       else if (def.key === 'roofDownward') { memberLoads = generateRoofOnlyCaseLoads(model, windResults, 'downward'); }
       else { memberLoads = generateWindMemberLoads(state, model, windResults, def.key); }
@@ -2856,7 +2938,7 @@ const Loads = (function () {
 
   // ---- Load combinations (IS 800:2007 representative subset) --------
   function combinationSignature(state, loadCases) {
-    return loadCases.map(c => c.key).join(',') + '|' + (state.solar.enabled ? 'S1' : 'S0');
+    return loadCases.map(c => c.key).join(',') + '|' + (state.solar.enabled ? 'S1' : 'S0') + '|IS800T4v3';   // bump when the combination rules change
   }
 
   function autoGenerateCombinations(loadCases) {
@@ -2878,6 +2960,19 @@ const Loads = (function () {
       combos.push({ id: n++, name: `1.5 (DL+${byKey[wk].title})`, factors: factorsFor([...dl.map(([k]) => [k, 1.5]), [wk, 1.5]]), enabled: true, category: 'strength' });
       combos.push({ id: n++, name: `0.9 DL + 1.5 ${byKey[wk].title} (uplift/reversal)`, factors: factorsFor([...dl.map(([k]) => [k, 0.9]), [wk, 1.5]]), enabled: true, category: 'strength' });
     });
+    loadCases.filter(c => c.kind === 'eq').forEach(ek => [1, -1].forEach(sg => {
+      const sy = sg > 0 ? '+' : '-', t = ek.title, dlk = []; if (hasDL) dlk.push('dead'); if (hasSolar) dlk.push('solar');
+      const F = (f, withLL) => { const o = {}; dlk.forEach(k => { o[k] = f; }); if (withLL && hasLL) o.live = f; o[ek.key] = sg * f; return o; };
+      // IS 1893: roof imposed load is not considered with earthquake, so the 1.2 (DL+LL+EL) case reduces to DL +/- EL (covered by 1.5)
+      combos.push({ id: n++, name: `1.5 (DL${sy}${t})`, factors: F(1.5, false), enabled: true, category: 'strength' });
+      const f9 = {}; dlk.forEach(k => { f9[k] = 0.9; }); f9[ek.key] = sg * 1.5;
+      combos.push({ id: n++, name: `0.9 DL ${sy} 1.5 ${t}`, factors: f9, enabled: true, category: 'strength' });
+    }));
+    // ---- Limit state of serviceability (IS 800:2007 Table 4) ----
+    //   DL + LL          : 1.0 DL + 1.0 LL
+    //   DL + WL / EL     : 1.0 DL + 1.0 WL (or EL)
+    //   DL + LL + WL/EL  : 1.0 DL + 0.8 LL + 0.8 WL (or EL)
+    // Roof imposed load is not combined with earthquake (IS 1893), so the EL service cases are DL +/- EL only.
     if (hasDL || hasLL) {
       const list = []; if (hasDL) list.push(['dead', 1.0]); if (hasSolar) list.push(['solar', 1.0]); if (hasLL) list.push(['live', 1.0]);
       combos.push({ id: n++, name: '1.0 (DL+LL) - service', factors: factorsFor(list), enabled: true, category: 'service' });
@@ -2885,8 +2980,12 @@ const Loads = (function () {
     windKeys.forEach(wk => {
       const dl = []; if (hasDL) dl.push(['dead', 1.0]); if (hasSolar) dl.push(['solar', 1.0]);
       combos.push({ id: n++, name: `1.0 (DL+${byKey[wk].title}) - service`, factors: factorsFor([...dl, [wk, 1.0]]), enabled: true, category: 'service' });
-      combos.push({ id: n++, name: `1.0 (DL+LL+${byKey[wk].title}) - service`, factors: factorsFor([...dl, ...(hasLL ? [['live', 1.0]] : []), [wk, 1.0]]), enabled: true, category: 'service' });
+      if (hasLL) combos.push({ id: n++, name: `1.0 DL + 0.8 LL + 0.8 ${byKey[wk].title} - service`, factors: factorsFor([...dl, ['live', 0.8], [wk, 0.8]]), enabled: true, category: 'service' });
     });
+    loadCases.filter(c => c.kind === 'eq').forEach(ek => [1, -1].forEach(sg => {
+      const f = {}; if (hasDL) f.dead = 1.0; if (hasSolar) f.solar = 1.0; f[ek.key] = sg * 1.0;
+      combos.push({ id: n++, name: `1.0 (DL${sg > 0 ? '+' : '-'}${ek.title}) - service`, factors: f, enabled: true, category: 'service' });
+    }));
     return combos;
   }
 
@@ -3064,7 +3163,7 @@ const Validation = (function () {
       warnings.push('Member-end releases are ENABLED for truss web/chord connections — this changes force distribution; confirm this matches your connection design.');
     }
     if (state.connections.purlinRelease) {
-      warnings.push('Purlin Release is ENABLED — purlin ends are idealised as simply supported; confirm this matches your purlin cleat/sag-rod connection design.');
+      warnings.push('Purlin Release is ENABLED — purlin ends are idealised as simply supported; Periphery purlins (eave/edge lines and end bays) are kept continuous - not released - to avoid instability. Confirm this matches your purlin cleat/sag-rod connection design.');
     }
 
     // ---- Scope notes (persistent, not per-change warnings — surfaced separately in UI) ----
@@ -3103,7 +3202,7 @@ const Staad = (function () {
 
   const GROUP_TO_SECTION_KEY = {
     columns: 'column', topChord: 'topChord', bottomChord: 'bottomChord',
-    web: 'web', purlin: 'purlin', bottomTie: 'bottomChord',
+    web: 'web', purlin: 'purlin', bottomTie: 'bottomChord', girt: 'girt',
     bracingWall: 'bracing', bracingRoof: 'bracing'
   };
 
@@ -3201,22 +3300,9 @@ const Staad = (function () {
     return out.trim();
   }
 
-  // Purlin orientation: BETA turns each purlin about its own x-axis so that local Y is the roof's
-  // outward normal, which lets the roof wind pressure be written as a plain local "UNI Y".
-  // Purlins run frame i -> i+1 (+X): default local y = global Y, local z = global Z, and a
-  // right-hand rotation BETA about +x gives y' = (0, cos b, sin b). The normal is (0, cos t, -sin t)
-  // on the left / mono slope (b = -t) and (0, cos t, +sin t) on the right slope (b = +t).
-  function constantsBlock(model) {
-    const lines = ['CONSTANTS', 'MATERIAL STEEL ALL'];
-    const theta = model.roofGeom && model.roofGeom.roofAngleDeg;
-    if (theta) {
-      const left = [], right = [];
-      model.members.forEach(m => { if (m.group === 'purlin') (m.sideId === 'R' ? right : left).push(m.id); });
-      if (left.length || right.length) lines.push('* Purlin local Y = roof outward normal (roof wind is applied as UNI Y)');
-      if (left.length) lines.push(`BETA ${num(-theta, 3)} MEMB ${compressIdList(left)}`);
-      if (right.length) lines.push(`BETA ${num(theta, 3)} MEMB ${compressIdList(right)}`);
-    }
-    return lines.join('\n');
+  // No BETA angles are written: every member keeps STAAD's default local axes.
+  function constantsBlock() {
+    return ['CONSTANTS', 'MATERIAL STEEL ALL'].join('\n');
   }
 
   function supportsBlock(state, model) {
@@ -3242,12 +3328,30 @@ const Staad = (function () {
     ].join('\n');
   }
 
+  // Periphery purlins = eave / edge lines and the two end bays. They act as eave strut / edge members and keep the
+  // frame nodes restrained, so they are NEVER released (releasing them can make STAAD report instability).
+  function peripheryPurlinIds(model) {
+    const X = {}; model.nodes.forEach(n => { X[n.id] = n.x; });
+    const x0 = Math.min(...model.framesX), x1 = Math.max(...model.framesX), single = model.profile.sides.length === 1, last = {};
+    const idx = k => Number(String(k).split('_')[1].replace(/\D/g, ''));
+    Object.keys(model.purlinLineMembers).forEach(k => { const sd = k.split('_')[0]; last[sd] = Math.max(last[sd] === undefined ? 0 : last[sd], idx(k)); });
+    const out = new Set();
+    model.members.forEach(m => {
+      if (m.group !== 'purlin') return;
+      const edge = idx(m.lineKey) === 0 || (single && idx(m.lineKey) === last[m.sideId]);
+      const endBay = Math.min(X[m.ni], X[m.nj]) < x0 + 1e-6 || Math.max(X[m.ni], X[m.nj]) > x1 - 1e-6;
+      if (edge || endBay) out.add(m.id);
+    });
+    return out;
+  }
+
   function releasePurlinsBlock(state, model) {
     if (!state.connections.purlinRelease) return '';
-    const ids = model.groups.purlin || [];
+    const per = peripheryPurlinIds(model), ids = (model.groups.purlin || []).filter(id => !per.has(id));
     if (!ids.length) return '';
     const list = compressIdList(ids);
     return [
+      '* Periphery purlins (eave/edge lines and end bays) are NOT released - keeps the frame stable',
       'MEMBER RELEASE',
       `${list} START MY MZ`,
       `${list} END MY MZ`
@@ -3264,17 +3368,21 @@ const Staad = (function () {
   }
 
   function loadBlocks(state, model, loadCases, unitSystem) {
-    const out = [];
+    const out = [], memberById = {}; model.members.forEach(m => { memberById[m.id] = m; });
     loadCases.forEach(lc => {
       out.push(`LOAD ${lc.id} ${lc.title}`);
       if (lc.selfWeight) out.push('SELFWEIGHT Y -1');
 
       const groupsByComponents = new Map(); // "gx,gy,gz" -> [memberId]
       lc.memberLoads.forEach(ml => {
-        const gx = ml.gx || 0, gy = ml.gy || 0, gz = ml.gz || 0, ly = ml.ly || 0;
-        if (gx === 0 && gy === 0 && gz === 0 && ly === 0) return;
-        const key = `${num(gx, 5)}|${num(gy, 5)}|${num(gz, 5)}|${num(ly, 5)}`;
-        if (!groupsByComponents.has(key)) groupsByComponents.set(key, { gx, gy, gz, ly, ids: [] });
+        const gx = ml.gx || 0; let gy = ml.gy || 0, gz = ml.gz || 0;
+        if (ml.ly) {   // roof wind acts normal to the roof surface: written in GLOBAL axes with the roof angle (no beta angle is used)
+          const mb = memberById[ml.memberId], th = (model.roofGeom && model.roofGeom.roofAngleRad) || 0, sd = mb && mb.sideId === 'R' ? 1 : -1;
+          gy += ml.ly * Math.cos(th); gz += ml.ly * sd * Math.sin(th);
+        }
+        if (gx === 0 && gy === 0 && gz === 0) return;
+        const key = `${num(gx, 5)}|${num(gy, 5)}|${num(gz, 5)}`;
+        if (!groupsByComponents.has(key)) groupsByComponents.set(key, { gx, gy, gz, ids: [] });
         groupsByComponents.get(key).ids.push(ml.memberId);
       });
 
@@ -3286,7 +3394,6 @@ const Staad = (function () {
           if (grp.gx) out.push(`${list} UNI GX ${num(grp.gx, 4)}`);
           if (grp.gy) out.push(`${list} UNI GY ${num(grp.gy, 4)}`);
           if (grp.gz) out.push(`${list} UNI GZ ${num(grp.gz, 4)}`);
-          if (grp.ly) out.push(`${list} UNI Y ${num(grp.ly, 4)}`);   // local Y (roof wind on purlins)
         });
       }
     });
@@ -3307,32 +3414,44 @@ const Staad = (function () {
 
   // IS 800:2007 design parameters per member group (STAAD: CODE IS800 LSD).
   // KY/KZ: Cl. 7.2.2 / Table 11 - MAIN/TMAIN: Table 3 slenderness limits - DFF: Table 6 deflection limits.
-  function designParams(state, gKey) {
+  function designParams(state, gKey, model) {
     const key = GROUP_TO_SECTION_KEY[gKey] || gKey;
     const fixed = !!(state.supports && state.supports.type === 'fixed');
     const p = { KY: 1.0, KZ: 1.0, MAIN: 180, TMAIN: 400, NSF: 1.0, DFF: 0 };
-    if (key === 'column') p.KZ = fixed ? 1.2 : 2.0;               // sway in frame plane (Table 11)
+    if (key === 'column') {
+      // a vertical member keeps STAAD's default axes (local z = global Z, inside the frame plane): frame-plane sway = buckling about local Y
+      p.KY = fixed ? 1.2 : 2.0;                                                  // sway in the frame plane (IS 800 Table 11)
+      if (model && model.girtLevels && model.girtLevels.length) p.LY = model.roofGeom.bottomChordHeight;   // girts split the column: in-plane length = full height
+    }
     else if (key === 'purlin') { p.MAIN = 300; p.DFF = 150; }     // beam member, elastic cladding L/150
+    else if (key === 'girt') { p.MAIN = 300; p.DFF = 150; }       // wall girt, elastic cladding L/150
     else if (key === 'topChord') p.DFF = 240;
     else if (key === 'bottomChord') { p.MAIN = 350; p.DFF = 240; } // tie, possible wind reversal (Table 3)
     else if (key === 'bracing') p.MAIN = 350;
     return p;
   }
 
-  function designBlock(state, model) {
+  // Strength is checked under the factored (strength) combinations only; deflection (DFF, IS 800 Table 6) is checked
+  // in a second run under the unfactored SERVICE combinations only - each run has its own LOAD LIST.
+  function designBlock(state, model, combinations) {
     const g = state.materials, us = state.project.unitSystem, d = us === 'mm-N' ? 1 : 0;
-    const out = ['PARAMETER 1', 'CODE IS800 LSD',
-      `FYLD ${num(Utils.stressForUnitSystem(g.Fy, us), d)} ALL`,
-      `FU ${num(Utils.stressForUnitSystem(g.Fu, us), d)} ALL`,
-      'RATIO 1.0 ALL', 'TRACK 2 ALL'];
-    const by = {};
-    Object.keys(model.groups).forEach(gk => {
-      const ids = model.groups[gk]; if (!ids || !ids.length) return;
-      const p = designParams(state, gk);
-      Object.keys(p).forEach(k => { if (!p[k]) return; const kk = k + ' ' + num(p[k], (k === 'MAIN' || k === 'TMAIN' || k === 'DFF') ? 0 : 2); (by[kk] = by[kk] || []).push(...ids); });
-    });
-    Object.keys(by).forEach(k => out.push(`${k} MEMB ${compressIdList(by[k])}`));
-    out.push('CHECK CODE ALL');
+    const on = (combinations || []).filter(c => c.enabled);
+    const strengthIds = on.filter(c => c.category !== 'service').map(c => c.id), serviceIds = on.filter(c => c.category === 'service').map(c => c.id);
+    const head = n => ['PARAMETER ' + n, 'CODE IS800 LSD', `FYLD ${num(Utils.stressForUnitSystem(g.Fy, us), d)} ALL`, `FU ${num(Utils.stressForUnitSystem(g.Fu, us), d)} ALL`, 'RATIO 1.0 ALL', 'TRACK 2 ALL'];
+    const params = withDFF => {
+      const by = {};
+      Object.keys(model.groups).forEach(gk => {
+        const ids = model.groups[gk]; if (!ids || !ids.length) return;
+        const p = designParams(state, gk, model);
+        Object.keys(p).forEach(k => { if (!p[k] || (k === 'DFF' && !withDFF)) return; const kk = k + ' ' + (k === 'LY' ? num(Utils.lengthForUnitSystem(p[k], us), 3) : num(p[k], (k === 'MAIN' || k === 'TMAIN' || k === 'DFF') ? 0 : 2)); (by[kk] = by[kk] || []).push(...ids); });
+      });
+      return Object.keys(by).map(k => `${k} MEMB ${compressIdList(by[k])}`);
+    };
+    const out = [];
+    if (strengthIds.length) out.push('* STRENGTH CHECK - factored combinations only (IS 800:2007 Table 4)', 'LOAD LIST ' + compressIdList(strengthIds));
+    out.push(...head(1), ...params(!serviceIds.length), 'CHECK CODE ALL');
+    if (serviceIds.length) out.push('', '* SERVICEABILITY CHECK - deflection limits (IS 800:2007 Table 6) under SERVICE combinations only', 'LOAD LIST ' + compressIdList(serviceIds), ...head(2), ...params(true), 'CHECK CODE ALL');
+    else out.push('* No serviceability combinations enabled - deflection (DFF) is NOT checked');
     return out.join('\n');
   }
 
@@ -3359,7 +3478,7 @@ const Staad = (function () {
       'PRINT SUPPORT REACTION',
       'PRINT MEMBER FORCES ALL',
       'PRINT MEMBER STRESSES ALL',
-      designBlock(state, model),
+      designBlock(state, model, combinations),
       'FINISH'
     ];
     return parts.filter(p => p && p.trim().length).join('\n\n');
@@ -3396,7 +3515,7 @@ const Report = (function () {
       },
       wind: {
         Vb: windResults.Vb, Vz: windResults.Vz, pz: windResults.pz, Pd: windResults.Pd,
-        Kd: windResults.Kd, Ka: windResults.Ka, Kc: windResults.Kc, factorNote: windResults.summaryText,
+        Kd: windResults.Kd, Ka: windResults.Ka, Kc: windResults.Kc, factorNote: windResults.summaryText, formulas: windResults.formulas || [],
         Cpi: windResults.Cpi, k1: windResults.k1, k2: windResults.k2, k3: windResults.k3, k4: windResults.k4,
         directions: Object.keys(windResults.directions).map(k => {
           const d = windResults.directions[k];
@@ -3411,7 +3530,7 @@ const Report = (function () {
       },
       loads: {
         deadLoad: state.deadLoad, liveLoad: state.liveLoad, solar: state.solar,
-        cases: loadCases.map(c => ({ id: c.id, title: c.title, selfWeight: c.selfWeight, memberLoadCount: c.memberLoads.length }))
+        cases: loadCases.map(c => ({ id: c.id, key: c.key, title: c.title, selfWeight: c.selfWeight, memberLoadCount: c.memberLoads.length }))
       },
       combinations: combinations.filter(c => c.enabled).map(c => ({ id: c.id, name: c.name, factors: c.factors })),
       model: {
@@ -3420,72 +3539,104 @@ const Report = (function () {
         supportCount: model.nodes.filter(n => Utils.nearlyEqual(n.y, 0, 1e-4)).length,
         loadCaseCount: loadCases.length, combinationCount: combinations.filter(c => c.enabled).length
       },
-      validation
+      validation,
+      materials: { grade: state.materials.grade, Fy: state.materials.Fy, E: state.materials.E },
+      connections: state.connections,
+      eqInput: state.eq || null,
+      eq: state.eq && state.eq.enabled ? Seismic.summary(state, model) : null,
+      sections: sectionRows(state, model),
+      girts: { levels: model.girtLevels || [], spacing: (state.girts || {}).spacing, cladding: (state.girts || {}).claddingLoad }
     };
   }
 
-  function toText(s) {
-    const L = [];
-    const line = (t = '') => L.push(t);
-    const rule = () => L.push('-'.repeat(64));
-    line(`INDUSTRIAL SHED / PEB STRUCTURAL CALCULATION SUMMARY`);
-    line(`AUTO-GENERATED -- VERIFY WITH APPLICABLE DESIGN CODE`);
-    line(`Generated: ${s.generatedAt}`);
-    rule();
-    line(`PROJECT`); line(`  Name        : ${s.project.name}`);
-    line(`  Location    : ${s.project.location || '(not specified)'}`);
-    line(`  Design code : ${s.project.code}`); line(`  Units       : ${s.project.unitSystem}`);
-    rule();
-    line('GEOMETRY');
-    line(`  Length x Width       : ${Utils.formatNumber(s.geometry.length, 2)} x ${Utils.formatNumber(s.geometry.width, 2)} m`);
-    line(`  Eave height          : ${Utils.formatNumber(s.geometry.eaveHeight, 2)} m`);
-    line(`  Ridge/apex height    : ${Utils.formatNumber(s.geometry.ridgeOrApexHeight, 2)} m`);
-    line(`  Roof angle           : ${Utils.formatNumber(s.geometry.roofAngleDeg, 2)} deg`);
-    const TRUSS_TYPE_NAMES = {
-      rafter: 'Rafter only', warren: 'Warren', pratt: 'Pratt', howe: 'Howe', fink: 'Fink',
-      kingpost: 'King Post', queenpost: 'Queen Post', parallelchord: 'Parallel Chord',
-      monopitch: 'Mono-pitch / Lean-to', custom: 'Custom'
-    };
-    line(`  Roof/truss type      : ${s.geometry.roofType} / ${TRUSS_TYPE_NAMES[s.geometry.trussType] || s.geometry.trussType}  (${s.geometry.numberOfPanels} truss panels, ${s.geometry.numberOfPurlinPanels} purlin spaces)`);
-    line(`  Truss depth at apex  : ${Utils.formatNumber(s.geometry.trussDepth, 3)} m`);
-    line(`  Bays (${s.geometry.numberOfBays})            : ${s.geometry.baySpacings.map(b => Utils.formatNumber(b, 2)).join(', ')} m`);
-    line('  Formulas:');
-    s.geometry.formulas.forEach(f => line(`    - ${f.label} = ${f.formula}  =>  ${Utils.formatNumber(f.result, 3)} ${f.unit}`));
-    rule();
-    line('WIND');
-    line(`  Vb=${s.wind.Vb} m/s  k1=${s.wind.k1} k2=${s.wind.k2} k3=${s.wind.k3} k4=${s.wind.k4}`);
-    line(`  Vz = ${Utils.formatNumber(s.wind.Vz, 2)} m/s   pz = ${Utils.formatNumber(s.wind.pz, 3)} kN/m2   Pd = ${Utils.formatNumber(s.wind.Pd, 3)} kN/m2`);
-    line(`  Kd=${s.wind.Kd}  Ka(roof)=${Utils.formatNumber(s.wind.Ka, 3)}  Kc=${s.wind.Kc}   pd = max(Kd*Ka*Kc, 0.70)*pz  (IS 875 Part 3:2015 Cl. 7.2)`);
-    line(`  Cpi = +/-${s.wind.Cpi}  (both +Cpi and -Cpi cases are analysed, Cl. 7.3.2)`);
-    if (s.wind.factorNote) line('  ' + s.wind.factorNote);
-    s.wind.directions.forEach(d => {
-      line(`  [${d.label}]`);
-      line(`    Walls: windward Cpe=${d.windwardWallCpe} Pnet=${Utils.formatNumber(d.windwardWallPnet, 3)} kN/m2 | leeward Cpe=${d.leewardWallCpe} Pnet=${Utils.formatNumber(d.leewardWallPnet, 3)} kN/m2`);
-      d.roofZones.forEach(rz => line(`    Roof [${rz.side}] ${rz.name}: Cpe=${rz.cpe}  Pnet=${Utils.formatNumber(rz.Pnet, 3)} kN/m2  (${rz.sense})`));
+  function sectionRows(state, model) {
+    const L = { column: 'Columns', topChord: 'Top chord / rafter', bottomChord: 'Bottom chord and ties', web: 'Web members', purlin: 'Purlins', girt: 'Girts', bracing: 'Bracing' }, acc = {};
+    model.members.forEach(m => { const k = Staad.GROUP_TO_SECTION_KEY[m.group]; if (!k) return; (acc[k] = acc[k] || { len: 0 }).len += m.length; });
+    return Object.keys(L).filter(k => acc[k]).map(k => {
+      const sec = state.sections[k], p = SectionsData.getProperties(sec) || {}, kgm = (p.unitWeightKNm || 0) * 101.97;
+      return { label: L[k], name: SectionsData.describe(sec), len: acc[k].len, kgm, kg: kgm * acc[k].len };
     });
-    rule();
-    line('LOADS'); line(`  Dead load components (kN/m2): ${JSON.stringify(s.loads.deadLoad)}`);
-    line(`  Live load (kN/m2): ${JSON.stringify(s.loads.liveLoad)}`);
-    if (s.loads.solar.enabled) line(`  Solar load: ${JSON.stringify(s.loads.solar)}`);
-    line('  Load cases:');
-    s.loads.cases.forEach(c => line(`    ${c.id}. ${c.title}${c.selfWeight ? ' (+ SELFWEIGHT)' : ''} -- ${c.memberLoadCount} member load(s)`));
-    rule();
-    line('LOAD COMBINATIONS');
-    s.combinations.forEach(c => line(`  ${c.id}. ${c.name}`));
-    rule();
-    line('STAAD MODEL SUMMARY');
-    line(`  Nodes: ${s.model.nodeCount}   Members: ${s.model.memberCount}   Supports: ${s.model.supportCount}`);
-    line(`  Member groups: ${JSON.stringify(s.model.groupCounts)}`);
-    line(`  Load cases: ${s.model.loadCaseCount}   Load combinations: ${s.model.combinationCount}`);
-    rule();
-    line('ENGINEERING CHECKS');
-    if (s.validation.errors.length) { line('  ERRORS:'); s.validation.errors.forEach(e => line(`    - ${e}`)); }
-    else line('  No blocking errors.');
-    if (s.validation.warnings.length) { line('  WARNINGS:'); s.validation.warnings.forEach(w => line(`    - ${w}`)); }
-    else line('  No warnings.');
-    rule();
-    line('This output is a design aid only and requires review and sign-off');
-    line('by a qualified structural engineer before use for construction.');
+  }
+
+  const TRUSS_NAMES = {
+    rafter: 'Rafter only', warren: 'Warren', pratt: 'Pratt', howe: 'Howe', fink: 'Fink', kingpost: 'King Post',
+    queenpost: 'Queen Post', parallelchord: 'Parallel Chord', monopitch: 'Mono-pitch / Lean-to', custom: 'Custom'
+  };
+
+  // The calculation report is a list of numbered steps; every step shows its inputs, formula / clause and result.
+  function steps(s) {
+    const f = (v, d) => Utils.formatNumber(v, d === undefined ? 2 : d), S = [], add = (title, lines) => S.push({ title, lines });
+    const g = s.geometry, w = s.wind, ld = s.loads, dl = ld.deadLoad, ll = ld.liveLoad, sm = s.sections, tot = sm.reduce((a, x) => a + x.kg, 0);
+    add('PROJECT AND DESIGN BASIS', [
+      `Name        : ${s.project.name}`, `Location    : ${s.project.location || '(not specified)'}`,
+      `Design code : ${s.project.code}`, `Units       : ${s.project.unitSystem}`,
+      'Codes used  : IS 800:2007 (limit state design), IS 875 Part 1 (dead load), IS 875 Part 2 (imposed load),',
+      '              IS 875 Part 3:2015 (wind load), IS 1893 (Part 1):2016 (earthquake load)',
+      'Method      : STAAD.Pro input generated from this model; member sizes are as selected in "Member Sections"']);
+    add('GEOMETRY', [
+      `Length x Width      : ${f(g.length)} x ${f(g.width)} m`, `Eave height         : ${f(g.eaveHeight)} m`,
+      `Ridge / apex height : ${f(g.ridgeOrApexHeight)} m`, `Roof angle          : ${f(g.roofAngleDeg)} deg`,
+      `Roof / truss type   : ${g.roofType} / ${TRUSS_NAMES[g.trussType] || g.trussType}  (${g.numberOfPanels} truss panels, ${g.numberOfPurlinPanels} purlin panels)`,
+      `Truss depth at apex : ${f(g.trussDepth, 3)} m`, `Bays (${g.numberOfBays})            : ${g.baySpacings.map(b => f(b)).join(', ')} m`,
+      'Derived dimensions:'].concat(g.formulas.map(x => `  ${x.label} = ${x.formula}  =>  ${f(x.result, 3)} ${x.unit}`),
+      [s.girts.levels.length ? `Side-wall girts: ${s.girts.levels.length} line(s) per wall at y = ${s.girts.levels.map(y => f(y, 2)).join(', ')} m (spacing ${f(s.girts.spacing)} m); columns are split at these levels; eave strut at the top` : 'Side-wall girts: none']));
+    add('MATERIAL AND MEMBER SECTIONS', [`Steel ${s.materials.grade || ''}: fy = ${s.materials.Fy} N/mm2, E = ${s.materials.E} N/mm2`]
+      .concat(sm.map(x => `${x.label.padEnd(22)}: ${x.name}  |  ${f(x.len, 1)} m  |  ${f(x.kgm, 1)} kg/m  |  ${f(x.kg, 0)} kg`),
+        [`Approximate steel weight: ${f(tot, 0)} kg  (${f(tot / (g.length * g.width), 1)} kg/m2 of plan area)`]));
+    const roofA = (dl.roofSheeting || 0) + (dl.purlinsAllowance || 0) + (dl.bracingAllowance || 0) + (dl.insulation || 0) + (dl.misc || 0), ceilA = (dl.ceiling || 0) + (dl.services || 0);
+    add('DEAD LOAD  (IS 875 Part 1)', [
+      `Roof (kN/m2 of sloped surface): sheeting ${dl.roofSheeting}, purlins ${dl.purlinsAllowance}, bracing ${dl.bracingAllowance}, insulation ${dl.insulation}, misc ${dl.misc}  =>  ${f(roofA, 3)} kN/m2`,
+      `Ceiling / services (kN/m2 on bottom chord): ${f(ceilA, 3)} kN/m2`, 'Self weight of steel members: added by STAAD (SELFWEIGHT)',
+      s.girts.levels.length ? `Wall cladding on girts: ${f(s.girts.cladding, 3)} kN/m2 x girt tributary height (half the gap to each neighbour); the eave strut takes the top half-gap` : 'Wall cladding weight: not modelled (girts OFF)',
+      'Conversion to member load: UDL on purlin = area load x tributary width (half gap to each neighbouring purlin, measured along the slope)']);
+    const cosT = Math.cos(g.roofAngleDeg * Math.PI / 180);
+    add('LIVE AND SOLAR LOAD  (IS 875 Part 2)', [
+      `Roof imposed load = ${ll.roofLive} kN/m2 on PLAN area  =>  ${f(ll.roofLive * cosT, 3)} kN/m2 on the sloped surface (x cos ${f(g.roofAngleDeg)} deg)`,
+      `Maintenance load = ${ll.maintenance || 0} kN/m2   |   Point load = ${ll.pointLoad || 0} kN`,
+      ld.solar && ld.solar.enabled ? `Solar load: ${JSON.stringify(ld.solar)}` : 'Solar load: not considered']);
+    const wl = [`Basic wind speed Vb = ${w.Vb} m/s   (IS 875 Part 3:2015, Fig. 1 / Annex A)`];
+    w.formulas.forEach(x => wl.push(`${x.label} : ${x.formula}  =>  ${typeof x.result === 'number' ? f(x.result, 3) : x.result} ${x.unit}`));
+    wl.push('Net pressure on a surface: Pnet = (Cpe - Cpi) x pd   (positive = acts INTO the surface)');
+    wl.push(s.girts.levels.length ? 'Wall load path: wall pressure -> girts (UDL = Pnet x tributary height) -> columns; eave strut takes the top half-gap, the base the lowest half-gap' : 'Wall load path: wall pressure applied directly as UDL on the columns (girts OFF)');
+    if (w.factorNote) wl.push(w.factorNote);
+    w.directions.forEach(d => {
+      wl.push(`[${d.label}]`);
+      wl.push(`   Walls: windward Cpe = ${d.windwardWallCpe}, Pnet = ${f(d.windwardWallPnet, 3)} kN/m2  |  leeward Cpe = ${d.leewardWallCpe}, Pnet = ${f(d.leewardWallPnet, 3)} kN/m2`);
+      d.roofZones.forEach(rz => wl.push(`   Roof [${rz.side}] ${rz.name}: Cpe = ${rz.cpe}, Pnet = ${f(rz.Pnet, 3)} kN/m2  (${rz.sense})`));
+    });
+    add('WIND LOAD  (IS 875 Part 3:2015)', wl);
+    const q = s.eq, qi = s.eqInput;
+    add('EARTHQUAKE LOAD  (IS 1893 (Part 1):2016, equivalent static method)', q ? [
+      `Zone ${qi.zone}: Z = ${q.Z}   |   Soil type ${qi.soil}   |   Importance factor I = ${q.I}   |   Response reduction factor R = ${q.R}`,
+      `Height h = ${f(q.h)} m (eave)  ->  Ta = 0.085 h^0.75 = ${f(q.T, 3)} s   (Cl. 7.6.2, steel frame)`,
+      `Sa/g = ${f(q.sa, 3)}   (5 % damping spectrum for the soil type, Cl. 6.4.2)`,
+      `Ah = (Z/2) x (I/R) x (Sa/g) = ${f(q.Ah, 4)}   (Cl. 6.4.2; Ah is not taken below Z/2 when T <= 0.10 s)`,
+      `Seismic weight W = dead ${f(q.dead, 1)} + steel ${f(q.steel, 1)} + solar ${f(q.solar, 1)} = ${f(q.W, 1)} kN   (roof imposed load is not counted)`,
+      `Design base shear VB = Ah x W = ${f(q.VB, 1)} kN`,
+      'Application: VB is spread as a UDL over every purlin (roof-level mass): EARTHQUAKE +X (gx) and EARTHQUAKE +Z (gz); each is combined with + and - sign (Step 9)',
+      'Orthogonal effect: regular, orthogonal frames are checked for one horizontal direction at a time (Cl. 6.3.2.1.1)',
+      (qi.zone === 'IV' || qi.zone === 'V') ? 'WARNING: zones IV / V also require the vertical earthquake component (Cl. 6.3.3) - NOT included in this tool' : 'Vertical earthquake component: not included (zones II / III)'
+    ] : ['Not considered (Earthquake load is OFF).']);
+    add('LOAD CASES', ld.cases.map(c => `${c.id}. ${c.title}${c.selfWeight ? ' (+ SELFWEIGHT)' : ''}  --  ${c.memberLoadCount} member load(s)`));
+    const tt = {}; ld.cases.forEach(c => { tt[c.key] = c.title; });
+    add('LOAD COMBINATIONS  (IS 800:2007 Table 4)', ['Strength (factored): 1.5 (DL+LL) | 1.5 (DL +/- WL or EL) | 0.9 DL +/- 1.5 WL or EL | 1.2 (DL+LL+/-WL)', 'Serviceability (for deflection): 1.0 (DL+LL) | 1.0 (DL +/- WL or EL) | 1.0 DL + 0.8 LL + 0.8 WL', 'STAAD checks strength under the strength combinations and deflection (IS 800 Table 6) under the serviceability combinations - separate LOAD LISTs.', 'Earthquake combinations carry no roof imposed load.']
+      .concat(s.combinations.map(c => `${c.id}. ${c.name}   [ ${Object.keys(c.factors).map(k => c.factors[k] + ' x ' + (tt[k] || k)).join(' + ')} ]`)));
+    const c = s.connections || {};
+    add('STAAD MODEL', [`Nodes: ${s.model.nodeCount}   Members: ${s.model.memberCount}   Supports: ${s.model.supportCount}`, `Member groups: ${JSON.stringify(s.model.groupCounts)}`,
+      `Load cases: ${s.model.loadCaseCount}   Load combinations: ${s.model.combinationCount}`,
+      'Member direction: every member is defined toward +X (toward +Z in the frame planes, bottom-to-top when vertical), so STAAD gives the same local axes to all members of a kind; no member rotation is applied',
+      `Truss end release: ${c.trussEndRelease ? 'ON' : 'OFF'}   |   Purlin release: ${c.purlinRelease ? 'ON (periphery purlins - eave/edge lines and end bays - are never released)' : 'OFF'}`]);
+    const v = s.validation, vl = [];
+    if (v.errors.length) { vl.push('ERRORS:'); v.errors.forEach(e => vl.push(`  - ${e}`)); } else vl.push('No blocking errors.');
+    if (v.warnings.length) { vl.push('WARNINGS:'); v.warnings.forEach(x => vl.push(`  - ${x}`)); } else vl.push('No warnings.');
+    vl.push('', 'This output is a design aid only and requires review and sign-off by a qualified structural engineer before use for construction.');
+    add('ENGINEERING CHECKS AND SIGN-OFF', vl);
+    return S;
+  }
+
+  function toText(s) {
+    const L = ['INDUSTRIAL SHED / PEB STRUCTURAL CALCULATION REPORT', 'AUTO-GENERATED -- VERIFY WITH APPLICABLE DESIGN CODE', `Generated: ${s.generatedAt}`, '-'.repeat(64)];
+    steps(s).forEach((x, i) => { L.push(`STEP ${i + 1}: ${x.title}`, ...x.lines.map(l => '  ' + l), '-'.repeat(64)); });
     return L.join('\n');
   }
 
@@ -3530,8 +3681,12 @@ const Report = (function () {
   }
 
   function printableHTML(s) {
-    return `<div style="font-family:ui-monospace,Consolas,monospace;white-space:pre-wrap;font-size:12px;padding:24px;color:#111;">` +
-      Utils.escapeHTML(toText(s)) + `</div>`;
+    const E = Utils.escapeHTML;
+    return `<div style="font-family:Segoe UI,Arial,sans-serif;color:#111;padding:24px;max-width:900px;margin:auto;">` +
+      `<h1 style="font-size:20px;margin:0 0 4px">Structural Design Calculation Report</h1>` +
+      `<div style="font-size:12px;color:#555;margin-bottom:14px">${E(s.project.name)} &mdash; generated ${E(s.generatedAt)} &mdash; AUTO-GENERATED, verify with the applicable design codes</div>` +
+      steps(s).map((x, i) => `<h2 style="font-size:15px;margin:18px 0 6px;border-bottom:1px solid #999;page-break-after:avoid">Step ${i + 1}: ${E(x.title)}</h2>` +
+        `<pre style="font-family:ui-monospace,Consolas,monospace;font-size:11.5px;white-space:pre-wrap;margin:0">${E(x.lines.join('\n'))}</pre>`).join('') + `</div>`;
   }
 
   return { buildSummary, toText, toExcelHTML, nodesCSV, membersCSV, printableHTML };
@@ -3619,12 +3774,12 @@ const Viewer = (function () {
 
   const COLORS = {
     columns: 0x2d5f8a, topChord: 0x1b3a5c, bottomChord: 0x0d9488, web: 0x64748b,
-    purlin: 0x38bdf8, bottomTie: 0x14b8a6, bracingWall: 0xf59e0b, bracingRoof: 0xc026d3,
+    purlin: 0x38bdf8, bottomTie: 0x14b8a6, girt: 0x84cc16, bracingWall: 0xf59e0b, bracingRoof: 0xc026d3,
     node: 0xcbd5e1, selected: 0xef4444, support: 0x334155
   };
   const RADIUS = {
     columns: 0.09, topChord: 0.075, bottomChord: 0.05, web: 0.035,
-    purlin: 0.035, bottomTie: 0.03, bracingWall: 0.026, bracingRoof: 0.022
+    purlin: 0.035, bottomTie: 0.03, girt: 0.03, bracingWall: 0.026, bracingRoof: 0.022
   };
   // Bracing is rendered as thin lines rather than solid cylinders -- with
   // dozens of diagonals often crossing in a small end bay, thick 3D tubes
@@ -4346,6 +4501,48 @@ const Viewer = (function () {
 </script>
 <script>
 /* ============================================================
+   SEISMIC.JS
+   IS 1893 (Part 1):2016 equivalent static force. Mass is lumped at roof level and the base shear is
+   applied as a UDL on every purlin (EARTHQUAKE +X = gx, +Z = gz).
+   ============================================================ */
+const Seismic = (function () {
+  'use strict';
+  const ZF = { II: 0.10, III: 0.16, IV: 0.24, V: 0.36 };
+  const SECKEY = { columns: 'column', topChord: 'topChord', bottomChord: 'bottomChord', web: 'web', purlin: 'purlin', bottomTie: 'bottomChord', girt: 'girt', bracingWall: 'bracing', bracingRoof: 'bracing' };
+  function saByG(T, soil) {                        // 5 % damping spectrum, Cl. 6.4.2
+    if (T <= 0.10) return 1 + 15 * T;
+    const lim = { I: [0.40, 1.00], II: [0.55, 1.36], III: [0.67, 1.67] }[soil] || [0.55, 1.36];
+    return T <= lim[0] ? 2.5 : lim[1] / Math.min(T, 4);
+  }
+  function weight(state, model) {                  // seismic weight, kN (roof live load not counted, Table 10)
+    const L = {}; model.members.forEach(m => { L[m.id] = m.length; });
+    const sum = ml => ml.reduce((a, x) => a + Math.abs(x.gy || 0) * (L[x.memberId] || 0), 0);
+    const dead = sum(Loads.generateDeadLoad(state, model).memberLoads);
+    const solar = sum(Loads.generateSolarLoad(state, model).memberLoads);
+    let steel = 0;
+    model.members.forEach(m => { const p = SectionsData.getProperties(state.sections[SECKEY[m.group]]); if (p) steel += p.unitWeightKNm * m.length; });
+    return { dead, solar, steel, W: dead + solar + steel };
+  }
+  function summary(state, model) {
+    const q = state.eq || {}, h = model.roofGeom.bottomChordHeight, T = 0.085 * Math.pow(Math.max(h, 1), 0.75);
+    const sa = saByG(T, q.soil), Z = ZF[q.zone] || 0.16, I = Number(q.I) || 1, R = Number(q.R) || 3;
+    const Ah = Math.max(Z / 2 * I / R * sa, T <= 0.1 ? Z / 2 : 0), w = weight(state, model);
+    return Object.assign({ h, T, sa, Z, I, R, Ah, VB: Ah * w.W }, w);
+  }
+  function loads(state, model, key) {
+    const s = summary(state, model), pur = model.members.filter(m => m.group === 'purlin');
+    const tot = pur.reduce((a, m) => a + m.length, 0);
+    if (!tot || !s.VB) return [];
+    const ax = key === 'eqX' ? 'gx' : 'gz';
+    return pur.map(m => ({ memberId: m.id, [ax]: s.VB / tot }));
+  }
+  return { ZF, summary, loads };
+})();
+
+
+</script>
+<script>
+/* ============================================================
    MAIN.JS
 
    Orchestration only — all engineering logic lives in the other
@@ -4716,7 +4913,7 @@ const Viewer = (function () {
   // ---------------------------------------------------------------
   const SECTION_GROUPS = [
     ['column', 'Column'], ['topChord', 'Top Chord / Rafter'], ['bottomChord', 'Bottom Chord'],
-    ['web', 'Web Members'], ['purlin', 'Purlin'], ['bracing', 'Bracing']
+    ['web', 'Web Members'], ['purlin', 'Purlin'], ['girt', 'Girts'], ['bracing', 'Bracing']
   ];
 
   const CATALOG_KINDS = ['ISMB', 'ISMC', 'ISA'];
@@ -4738,6 +4935,79 @@ const Viewer = (function () {
       h += `<optgroup label="${br ? pre + k : CATALOG_TITLE[k]}">` + SectionsData.hollowList(k).filter(x => (x.brand || '') === br).map(x => opt(k + '|' + x.id, x.label)).join('') + '</optgroup>';
     }));
     return h;
+  }
+
+  // ---------------------------------------------------------------
+  // Earthquake result table (UI)
+  // ---------------------------------------------------------------
+  function renderEqResult() {
+    const el = document.getElementById('eq-result'); if (!el) return;
+    const st = AppState.get(), model = st.derived && st.derived.model;
+    if (!st.eq || !st.eq.enabled || !model) { el.innerHTML = '<p class="hint">Earthquake load OFF hai. Upar checkbox ON karein.</p>'; return; }
+    const s = Seismic.summary(st, model), f = (v, d) => v.toFixed(d);
+    const rows = [['Eave height h, m', f(s.h, 2)], ['Time period T = 0.085 h^0.75, s', f(s.T, 3)], ['Sa/g (5 % damping)', f(s.sa, 3)], ['Zone factor Z', f(s.Z, 2)],
+      ['Ah = (Z/2)(I/R)(Sa/g)', f(s.Ah, 4)], ['Seismic weight W (dead + steel + solar), kN', f(s.W, 1)], ['Base shear VB = Ah × W, kN', f(s.VB, 1)]];
+    el.innerHTML = '<table><tbody>' + rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('') + '</tbody></table>' +
+      '<p class="hint">VB roof level par purlins ke upar UDL ki tarah lagta hai (EQ +X = gx, EQ +Z = gz). Combinations IS 800 Table 4 ke hisaab se ± dono direction me ban jaate hain.</p>';
+  }
+
+  // ---------------------------------------------------------------
+  // STAAD file download is protected by a password (client-side gate; only the SHA-256 hash is stored)
+  // ---------------------------------------------------------------
+  const STAAD_PW_SHA256 = 'cd27445971a60de91ec456fecc8b483efe71eb2c1a9058c23d769f070653e365';
+  function sha256hex(str) {                          // pure-JS SHA-256, also works on file:// pages
+    const msg = unescape(encodeURIComponent(str)), K = [], H = [];
+    for (let n = 2, c = 0; c < 64; n++) {
+      let pr = true; for (let d = 2; d * d <= n; d++) if (n % d === 0) { pr = false; break; }
+      if (!pr) continue;
+      if (c < 8) H[c] = (Math.pow(n, 1 / 2) % 1) * 4294967296 | 0;
+      K[c++] = (Math.pow(n, 1 / 3) % 1) * 4294967296 | 0;
+    }
+    const b = []; for (let i = 0; i < msg.length; i++) b.push(msg.charCodeAt(i));
+    const bits = b.length * 8; b.push(0x80); while (b.length % 64 !== 56) b.push(0);
+    for (let i = 7; i >= 0; i--) b.push(i >= 4 ? 0 : (bits >>> (i * 8)) & 255);
+    const rr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let o = 0; o < b.length; o += 64) {
+      const w = [];
+      for (let i = 0; i < 16; i++) w[i] = (b[o + 4 * i] << 24) | (b[o + 4 * i + 1] << 16) | (b[o + 4 * i + 2] << 8) | b[o + 4 * i + 3];
+      for (let i = 16; i < 64; i++) { const s0 = rr(w[i - 15], 7) ^ rr(w[i - 15], 18) ^ (w[i - 15] >>> 3), s1 = rr(w[i - 2], 17) ^ rr(w[i - 2], 19) ^ (w[i - 2] >>> 10); w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0; }
+      let [a, bb, c, d, e, f, g, h] = H;
+      for (let i = 0; i < 64; i++) {
+        const t1 = (h + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0, t2 = ((rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & bb) ^ (a & c) ^ (bb & c))) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+      }
+      [a, bb, c, d, e, f, g, h].forEach((v, i) => { H[i] = (H[i] + v) | 0; });
+    }
+    return H.map(x => ('00000000' + (x >>> 0).toString(16)).slice(-8)).join('');
+  }
+  function askStaadPassword(onOk) {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML = '<div style="background:#fff;color:#111;padding:18px;border-radius:10px;width:min(340px,100%);font:14px system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.4)">' +
+      '<b style="font-size:16px">STAAD file download</b><p style="margin:8px 0">Download ke liye password daalein:</p>' +
+      '<input type="password" id="staad-pw" autocomplete="off" style="width:100%;padding:9px;box-sizing:border-box;font-size:15px;border:1px solid #888;border-radius:6px">' +
+      '<div id="staad-pw-err" style="color:#c00;min-height:18px;font-size:12.5px;margin-top:4px"></div>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px"><button type="button" class="btn" id="staad-pw-cancel">Cancel</button><button type="button" class="btn primary" id="staad-pw-ok">Download</button></div></div>';
+    document.body.appendChild(ov);
+    const inp = ov.querySelector('#staad-pw'), err = ov.querySelector('#staad-pw-err'), close = () => ov.remove();
+    const submit = () => { if (sha256hex(inp.value.trim()) === STAAD_PW_SHA256) { close(); onOk(); } else { err.textContent = 'Galat password. Dobara try karein.'; inp.value = ''; inp.focus(); } };
+    ov.querySelector('#staad-pw-ok').addEventListener('click', submit);
+    ov.querySelector('#staad-pw-cancel').addEventListener('click', close);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); else if (e.key === 'Escape') close(); });
+    setTimeout(() => inp.focus(), 0);
+  }
+
+  // One password unlock per page session: it opens the STAAD previews, the .STD download and the node / member CSV exports.
+  // Reloading the page (or the Lock button) locks everything again.
+  var staadUnlocked = false;
+  function requireStaadAccess(onOk) {
+    if (staadUnlocked) { onOk(); return; }
+    askStaadPassword(() => { staadUnlocked = true; refreshStaadLock(); onOk(); });
+  }
+  function lockStaad() { staadUnlocked = false; refreshStaadLock(); }
+  function refreshStaadLock() {
+    renderStaadPreview(AppState.get().derived.staadText || '');
+    const b = document.getElementById('btn-lock-staad'); if (b) b.style.display = staadUnlocked ? '' : 'none';
   }
 
   function renderSectionsEditor() {
@@ -4929,6 +5199,7 @@ const Viewer = (function () {
       <tr><td>Nodes</td><td>${model.nodes.length}</td></tr>
       <tr><td>Members</td><td>${model.members.length}</td></tr>
       <tr><td>&nbsp;&nbsp;Columns / Top chord / Bottom chord / Web</td><td>${g.columns.length} / ${g.topChord.length} / ${g.bottomChord.length} / ${g.web.length}</td></tr>
+      <tr><td>&nbsp;&nbsp;Girts</td><td>${(g.girt || []).length}</td></tr>
       <tr><td>&nbsp;&nbsp;Purlin / Bottom tie / Wall bracing / Roof bracing</td><td>${g.purlin.length} / ${g.bottomTie.length} / ${g.bracingWall.length} / ${g.bracingRoof.length}</td></tr>
       <tr><td>Supports</td><td>${model.nodes.filter(n => Utils.nearlyEqual(n.y, 0, 1e-4)).length}</td></tr>
       <tr><td>Load cases</td><td>${loadCases.length}</td></tr>
@@ -4969,8 +5240,16 @@ const Viewer = (function () {
   }
 
   function renderStaadPreview(text) {
-    document.getElementById('staad-full-preview').textContent = text;
-    document.getElementById('staad-mini-preview').textContent = text;
+    ['staad-full-preview', 'staad-mini-preview'].forEach(id => {
+      const el = document.getElementById(id); if (!el) return;
+      if (staadUnlocked) { el.textContent = text; return; }
+      el.textContent = '';                                         // while locked there is nothing in the page to select or copy
+      const box = document.createElement('div');
+      box.style.cssText = 'padding:14px;text-align:center;white-space:normal;font-family:inherit';
+      box.innerHTML = '\uD83D\uDD12 STAAD commands locked hain.<br><button type="button" class="btn small" data-unlock-staad>Unlock (password)</button>';
+      el.appendChild(box);
+      box.querySelector('[data-unlock-staad]').addEventListener('click', () => requireStaadAccess(() => {}));
+    });
   }
 
   function renderReportView(state, model, windResults, loadCases, combinations, validation) {
@@ -4980,12 +5259,6 @@ const Viewer = (function () {
   }
 
   function sectionLabel(sec) { return SectionsData.describe(sec); }
-  function betaLabel(m, state) {
-    if (m.group !== 'purlin') return '0°';
-    const rg = state.derived && state.derived.roofGeometry;
-    const b = (m.sideId === 'R' ? 1 : -1) * (rg ? rg.roofAngleDeg : 0);
-    return `${Utils.formatNumber(b, 2)}° (local Y = roof normal)`;
-  }
 
   function renderPropertiesPanel(sel) {
     const host = document.getElementById('properties-content');
@@ -4995,7 +5268,7 @@ const Viewer = (function () {
       const m = sel.data;
       const secKey = Staad.GROUP_TO_SECTION_KEY[m.group];
       const sec = secKey ? state.sections[secKey] : null;
-      const dp = Staad.designParams(state, m.group);
+      const dp = Staad.designParams(state, m.group, state.derived.model);
       host.innerHTML = `<table><tbody>
         <tr><td>Member ID</td><td>${m.id}</td></tr>
         <tr><td>Group</td><td>${m.group}</td></tr>
@@ -5005,7 +5278,8 @@ const Viewer = (function () {
         <tr><td>Section</td><td>${sectionLabel(sec)}</td></tr>
         <tr><td>Design code</td><td>IS 800:2007 (LSD)</td></tr>
         <tr><td>FYLD / FU</td><td>${state.materials.Fy} / ${state.materials.Fu} N/mm²</td></tr>
-        <tr><td>KY / KZ</td><td>${dp.KY.toFixed(2)} / ${dp.KZ.toFixed(2)}</td></tr>
+        <tr><td>KY / KZ</td><td>${dp.KY.toFixed(2)} / ${dp.KZ.toFixed(2)}</td></tr>${dp.LY ? `
+        <tr><td>LY</td><td>${Utils.formatNumber(dp.LY, 3)} m (full column height)</td></tr>` : ''}
         <tr><td>MAIN / TMAIN</td><td>${dp.MAIN} / ${dp.TMAIN}</td></tr>
         <tr><td>NSF / RATIO</td><td>${dp.NSF.toFixed(2)} / 1.00</td></tr>${dp.DFF ? `
         <tr><td>DFF</td><td>L/${dp.DFF}</td></tr>` : ''}
@@ -5057,11 +5331,12 @@ const Viewer = (function () {
       recalcAll();
     });
 
+    document.getElementById('btn-lock-staad').addEventListener('click', lockStaad);
     document.getElementById('btn-download-staad').addEventListener('click', () => {
       const state = AppState.get();
-      Storage.exportSTAAD(state.derived.staadText, state.project.name);
+      requireStaadAccess(() => Storage.exportSTAAD(state.derived.staadText, state.project.name));
     });
-    document.getElementById('btn-open-staad').addEventListener('click', () => {
+    document.getElementById('btn-open-staad').addEventListener('click', () => requireStaadAccess(() => {
       const state = AppState.get();
       Storage.exportSTAAD(state.derived.staadText, state.project.name);
       showModal(`<h3>Generate &amp; Open in STAAD.Pro</h3>
@@ -5077,7 +5352,7 @@ STAAD.Pro OpenSTAAD API
    |
    v
 STAAD.Pro opens the model</pre>`);
-    });
+    }));
 
     document.getElementById('btn-export-txt').addEventListener('click', () => {
       const state = AppState.get();
@@ -5089,15 +5364,15 @@ STAAD.Pro opens the model</pre>`);
     });
     document.getElementById('btn-export-nodes-csv').addEventListener('click', () => {
       const state = AppState.get();
-      Storage.exportCSV(Report.nodesCSV(state.derived.model), state.project.name, '-nodes');
+      requireStaadAccess(() => Storage.exportCSV(Report.nodesCSV(state.derived.model), state.project.name, '-nodes'));
     });
     document.getElementById('btn-export-members-csv').addEventListener('click', () => {
       const state = AppState.get();
-      Storage.exportCSV(Report.membersCSV(state.derived.model, state), state.project.name, '-members');
+      requireStaadAccess(() => Storage.exportCSV(Report.membersCSV(state.derived.model, state), state.project.name, '-members'));
     });
     document.getElementById('btn-export-members-csv-2').addEventListener('click', () => {
       const state = AppState.get();
-      Storage.exportCSV(Report.membersCSV(state.derived.model, state), state.project.name, '-members');
+      requireStaadAccess(() => Storage.exportCSV(Report.membersCSV(state.derived.model, state), state.project.name, '-members'));
     });
     document.getElementById('btn-export-pdf').addEventListener('click', () => {
       const w = window.open('', '_blank');
@@ -5173,6 +5448,7 @@ STAAD.Pro opens the model</pre>`);
       renderWindAutoSummary(windResults);
       refreshWindFactorInputs();
       renderModelSummary(model, loadCases, combinations);
+      renderEqResult();
       renderMemberListTable(model, state);
       renderLoadCasesTable(loadCases);
       renderCombosTable(combinations);
